@@ -5,7 +5,7 @@ import pandas as pd
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from google import genai
+import google.generativeai as genai
 from langchain_core.prompts import ChatPromptTemplate
 from io import StringIO
 
