@@ -69,12 +69,10 @@ def get_gemini_python(question, df_info):
         "input": question,
         "df_info": df_info
     })
-    client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=str(prompt)
-    )
-    code = response.text.strip()
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-2.5-flash")
+    response = model.generate_content(str(prompt))
+    code = response.text.strip() if hasattr(response, 'text') else response.candidates[0].content.parts[0].text.strip()
     if code.startswith('```python'):
         code = code.split('```python')[1].strip()
     if code.endswith('```'):
