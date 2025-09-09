@@ -7,3 +7,4 @@ google-generativeai
 langchain-core
 pydantic
 numpy
+gunicorn
