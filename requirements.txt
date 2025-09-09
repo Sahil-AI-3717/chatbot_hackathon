@@ -1,0 +1,9 @@
+# requirements.txt
+pandas
+fastapi
+uvicorn
+openpyxl
+google-generativeai
+langchain-core
+pydantic
+numpy
