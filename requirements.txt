@@ -1,10 +1,8 @@
-# requirements.txt
+Flask
+Flask-Cors
 pandas
-fastapi
-uvicorn
 openpyxl
+numpy
 google-generativeai
 langchain-core
-pydantic
-numpy
 gunicorn
