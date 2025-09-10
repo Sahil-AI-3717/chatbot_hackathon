@@ -69,15 +69,18 @@ def get_gemini_python(question, df_info):
         "input": question,
         "df_info": df_info
     })
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    response = model.generate_content(str(prompt))
-    code = response.text.strip() if hasattr(response, 'text') else response.candidates[0].content.parts[0].text.strip()
-    if code.startswith('```python'):
-        code = code.split('```python')[1].strip()
-    if code.endswith('```'):
-        code = code.rsplit('```', 1)[0].strip()
-    return code
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(str(prompt))
+        code = response.text.strip() if hasattr(response, 'text') else response.candidates[0].content.parts[0].text.strip()
+        if code.startswith('```python'):
+            code = code.split('```python')[1].strip()
+        if code.endswith('```'):
+            code = code.rsplit('```', 1)[0].strip()
+        return code
+    except Exception as e:
+        return f"Error generating code from AI: {e}"
 
 def write_code(state, df_info):
     python_code = get_gemini_python(state["question"], df_info)
@@ -85,8 +88,14 @@ def write_code(state, df_info):
     return state
 
 def execute_code(state, df):
+    # Initialize a result dictionary to hold either data or an error message
+    result_dict = {}
     try:
         local_vars = {'df': df, 'pd': pd}
+        # Check if the generated code is a known error message from the AI call
+        if state["code"].startswith("Error generating code"):
+            raise ValueError(state["code"])
+            
         exec(state["code"], globals(), local_vars)
         result = local_vars['answer_query'](df)
         
@@ -105,10 +114,12 @@ def execute_code(state, df):
                     elif isinstance(v, (np.integer, np.floating)):
                         row[k] = v.item()
 
-        state["result"] = result
-        state["answer"] = json.dumps(state["result"], indent=2)
+        result_dict["data"] = result
     except Exception as e:
-        state["answer"] = f"Error executing Python code: {e}\n[Code: {state['code']}]"
+        # If an error occurs during execution, store it in the result dictionary
+        result_dict["error"] = f"Error executing Python code: {e}"
+
+    state["answer"] = result_dict
     return state
 
 # --- Load DataFrame once on startup ---
@@ -141,6 +152,7 @@ async def ask_question(request: AskRequest):
     state = write_code(state, df_info)
     state = execute_code(state, df)
 
-    return JSONResponse(content=json.loads(state['answer']))
-
-# To run: uvicorn backend:app --reload
+    if "error" in state["answer"]:
+        return JSONResponse(content=state["answer"], status_code=400)
+    else:
+        return JSONResponse(content=state["answer"]["data"])
