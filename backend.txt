@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 import google.generativeai as genai
 from langchain_core.prompts import ChatPromptTemplate
 from io import StringIO
-import numpy as np
 
 # --- IMPORTANT: Configure this section ---
 # Replace with the actual path to your Excel file
@@ -92,18 +91,13 @@ def execute_code(state, df):
     # Initialize a result dictionary to hold either data or an error message
     result_dict = {}
     try:
-        local_vars = {'df': df, 'pd': pd, 'np': np}
+        local_vars = {'df': df, 'pd': pd}
         # Check if the generated code is a known error message from the AI call
         if state["code"].startswith("Error generating code"):
             raise ValueError(state["code"])
             
         exec(state["code"], globals(), local_vars)
         result = local_vars['answer_query'](df)
-        
-        # --- NEW CODE: Check for empty results and set a user-friendly error ---
-        if result is None or (isinstance(result, (list, dict)) and not result):
-            raise ValueError("The analysis returned an empty result.")
-        # --- END OF NEW CODE ---
         
         # If result is a DataFrame, convert datetime columns to string
         if isinstance(result, pd.DataFrame):
@@ -112,6 +106,7 @@ def execute_code(state, df):
             result = result.to_dict('records')
         # If result is a list of dicts, convert any datetime or numpy values to string/native
         elif isinstance(result, list):
+            import numpy as np
             for row in result:
                 for k, v in row.items():
                     if hasattr(v, 'isoformat'):
@@ -120,11 +115,8 @@ def execute_code(state, df):
                         row[k] = v.item()
 
         result_dict["data"] = result
-    except ValueError as e:
-        # Catch our custom ValueError for empty results
-        result_dict["error"] = "Sorry, I couldn't find a meaningful answer with the data provided. Please try rephrasing your question."
     except Exception as e:
-        # Catch any other errors during code execution
+        # If an error occurs during execution, store it in the result dictionary
         result_dict["error"] = f"Error executing Python code: {e}"
 
     state["answer"] = result_dict
