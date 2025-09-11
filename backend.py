@@ -121,7 +121,7 @@ def execute_code(state, df):
         result_dict["data"] = result
     except ValueError as e:
         # Catch our custom ValueError for empty results
-        result_dict["error"] = "Sorry, I couldn't find a meaningful answer with the data provided. Please try rephrasing your question."
+        result_dict["error"] = "We couldn’t find any results for your search. Please try again with different keywords."
     except Exception as e:
         # Catch any other errors during code execution
         result_dict["error"] = f"Error executing Python code: {e}"
