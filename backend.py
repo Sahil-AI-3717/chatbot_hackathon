@@ -100,10 +100,9 @@ def execute_code(state, df):
         exec(state["code"], globals(), local_vars)
         result = local_vars['answer_query'](df)
         
-        # --- NEW CODE: Check for empty results and set a user-friendly error ---
+        # Check for empty results and set a user-friendly error
         if result is None or (isinstance(result, (list, dict)) and not result):
             raise ValueError("The analysis returned an empty result.")
-        # --- END OF NEW CODE ---
         
         # If result is a DataFrame, convert datetime columns to string
         if isinstance(result, pd.DataFrame):
@@ -163,4 +162,6 @@ async def ask_question(request: AskRequest):
     if "error" in state["answer"]:
         return JSONResponse(content=state["answer"], status_code=400)
     else:
+        # The new check in execute_code handles empty data, so we can
+        # directly return the data here.
         return JSONResponse(content=state["answer"]["data"])
