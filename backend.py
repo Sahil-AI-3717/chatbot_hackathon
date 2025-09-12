@@ -12,7 +12,7 @@ import numpy as np
 
 # --- IMPORTANT: Configure this section ---
 # Replace with the actual path to your Excel file
-EXCEL_FILE_PATH = 'Final Database_Heatmap_Updated.xlsx'
+EXCEL_FILE_PATH = 'FINAL DATABSE CHATBOT.xlsx'
 # Set your Gemini API key here
 GEMINI_API_KEY = "AIzaSyC7ArGGt5TxvWgihT0GtwdAgNuEm69hOVo"
 
